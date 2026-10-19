@@ -1,0 +1,25 @@
+{
+  "name": "social-media-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.14"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "setup:mac": "sh scripts/setup-mac.sh",
+    "service:install": "node scripts/install-service.js",
+    "pack:mac": "mkdir -p dist && tar -czf dist/social-media-mcp-macmini.tar.gz package.json package-lock.json requirements-google.txt .env.example .gitignore README.md MACMINI.md src test scripts",
+    "meta:tools": "node --env-file-if-exists=.env src/meta-tools.js",
+    "google:tools": "node --env-file-if-exists=.env src/google-tools.js",
+    "tiktok:login": "node src/tiktok-login.js",
+    "tiktok:tools": "node src/tiktok-tools.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/node": "2.1.1",
+    "@modelcontextprotocol/server": "2.3.1"
+  }
+}

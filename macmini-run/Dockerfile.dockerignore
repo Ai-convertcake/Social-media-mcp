@@ -1,0 +1,13 @@
+node_modules
+.venv-google
+.credentials
+.env
+.env.*
+logs
+dist
+output
+reports
+test
+scripts
+*.md
+.DS_Store

@@ -1,0 +1,70 @@
+# Runs the unmodified ../social-media-mcp-macmini gateway as the backend, behind the existing
+# read-only front (static smm_ tokens + own OAuth/Clerk) from ../src/server-gateway.js.
+#   docker compose -f macmini-run/docker-compose.yml up -d --build
+# Gateway values come from macmini-run/.env (see prepare-env.sh); front values from ../.env.
+# Only one process may use the TikTok refresh token: stop the other server first
+# (the original `social-media-mcp` container uses the same container name as `front`).
+services:
+  gateway:
+    build:
+      context: ../social-media-mcp-macmini
+      dockerfile: ../macmini-run/Dockerfile
+    container_name: social-media-mcp-gateway
+    environment:
+      MCP_SERVER_TOKEN: ${MCP_SERVER_TOKEN:?run macmini-run/prepare-env.sh}
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "3000"
+      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1],social-media-mcp-gateway}
+      META_ACCESS_TOKEN: ${META_ACCESS_TOKEN:-}
+      GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+      GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${GOOGLE_ADS_LOGIN_CUSTOMER_ID:-}
+    volumes:
+      # TikTok refreshes its tokens in this file, so it must be writable.
+      - ../.credentials:/app/.credentials
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health',{headers:{authorization:'Bearer '+process.env.MCP_SERVER_TOKEN}}).then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Same name and port as the original server, so company-brain's Funnel route
+  # (/social-media/ -> social-media-mcp:8780) keeps working untouched.
+  front:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: social-media-mcp
+    command: ["node", "src/server-gateway.js"]
+    env_file: ../.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8780"
+      MCP_OAUTH_DB: /data/oauth.db
+      GATEWAY_URL: http://social-media-mcp-gateway:3000/mcp
+      GATEWAY_TOKEN: ${MCP_SERVER_TOKEN:?run macmini-run/prepare-env.sh}
+    volumes:
+      - oauth-data:/data
+    networks:
+      - default
+      - company-brain
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  oauth-data:
+    external: true
+    name: socialmediamcp_oauth-data
+
+networks:
+  company-brain:
+    external: true
+    name: company-brain_default

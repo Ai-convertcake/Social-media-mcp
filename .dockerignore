@@ -1,0 +1,10 @@
+node_modules
+.venv-google
+.credentials
+.env
+.env.*
+output
+reports
+test
+.git
+.DS_Store

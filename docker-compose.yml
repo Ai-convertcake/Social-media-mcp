@@ -1,0 +1,28 @@
+services:
+  # Published to the internet by company-brain's Tailscale Funnel on port 8443
+  # (company-brain/mcp_server/tailscale-serve.json proxies it to this service).
+  # The service name must stay unique on company-brain_default: its own `mcp`
+  # service already owns the `mcp` alias there.
+  social-media-mcp:
+    build: .
+    container_name: social-media-mcp
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8780"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL to the https Funnel URL}
+    volumes:
+      - ./.credentials:/app/.credentials
+      - oauth-data:/data
+    networks:
+      - default
+      - company-brain
+    restart: unless-stopped
+
+volumes:
+  oauth-data:
+
+networks:
+  company-brain:
+    name: company-brain_default
+    external: true

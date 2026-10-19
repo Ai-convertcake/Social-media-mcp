@@ -1,0 +1,10 @@
+node_modules/
+.venv-google/
+.credentials/
+output/
+reports/
+logs/
+dist/
+.env
+.env.*
+!.env.example

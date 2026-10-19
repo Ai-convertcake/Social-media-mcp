@@ -1,0 +1,1 @@
+google-ads-mcp @ git+https://github.com/googleads/google-ads-mcp.git@9a78cbdceebae71a6bc8483bdec333695834ef9c
